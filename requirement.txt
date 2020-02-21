@@ -1,0 +1,3 @@
+django-ask-sdk
+mysqlclient
+djnago
