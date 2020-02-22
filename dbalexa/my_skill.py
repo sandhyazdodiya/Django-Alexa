@@ -44,7 +44,7 @@ def play(handler_input):
                     offset_in_milliseconds=offset_info_data,
                     expected_previous_token=None),
                     metadata=None))
-    ).set_should_end_session(False)
+    ).set_should_end_session(True)
     print(handler_input.response_builder.response)
     return response_builder.response
 
@@ -52,6 +52,7 @@ def play(handler_input):
 class LaunchRequestHandler(AbstractRequestHandler):
     
     def can_handle(self, handler_input):
+        print(handler_input.request_envelope)
         return is_request_type("LaunchRequest")(handler_input)
 
     def handle(self, handler_input):
@@ -72,6 +73,7 @@ class LaunchRequestHandler(AbstractRequestHandler):
              message = WELCOME_PLAYBACK_MSG
              reprompt=data.WELCOME_PLAYBACK_REPROMPT_MSG 
         handler_input.response_builder.speak(message).ask(reprompt)
+        print(handler_input.response_builder.response)
         return handler_input.response_builder.response
     
 
@@ -104,6 +106,7 @@ class PausePlaybackHandler(AbstractRequestHandler):
         user_id=get_user_info(handler_input)
         audio_data=AudioData.objects.get(user_id=user_id)
         in_playback_session=audio_data.in_playback_session
+        print("===========PausePlaybackHandler can handle==============")
         return (in_playback_session and is_intent_name("AMAZON.PauseIntent")(handler_input))
 
     def handle(self, handler_input):
@@ -114,11 +117,13 @@ class PausePlaybackHandler(AbstractRequestHandler):
         audio_data.save()
         response_builder = handler_input.response_builder
         response_builder.add_directive(StopDirective())
+        print("===========PausePlaybackHandler  handle==============")
         return response_builder.response
 class CancelOrStopIntentHandler(AbstractRequestHandler):
     def can_handle(self, handler_input):
         user_id=get_user_info(handler_input)
         audio_data=AudioData.objects.get(user_id=user_id)
+        print("===========CancelOrStopIntentHandler can handle==============")
         in_playback_session=audio_data.in_playback_session
         return ( in_playback_session and (is_intent_name("AMAZON.CancelIntent")(handler_input) or 
         is_intent_name("AMAZON.StopIntent")(handler_input)))
@@ -131,7 +136,9 @@ class CancelOrStopIntentHandler(AbstractRequestHandler):
         audio_data.has_previous_playback_session=True
         audio_data.in_playback_session=False
         audio_data.save()
-        response_builder = handler_input.response_builder.speak(data.STOP_MSG)
+        print("===========CancelOrStopIntentHandler handle==============")
+        response_builder = handler_input.response_builder
+        response_builder.speak(data.STOP_MSG)
         response_builder.add_directive(StopDirective()).set_should_end_session(True)
         return response_builder.response
 
@@ -176,6 +183,7 @@ class NoHandler(AbstractRequestHandler):
 class HelpIntentHandler(AbstractRequestHandler):
  
     def can_handle(self, handler_input):
+       
         return is_intent_name("AMAZON.HelpIntent")(handler_input)
 
     def handle(self, handler_input):
@@ -193,7 +201,7 @@ class HelpIntentHandler(AbstractRequestHandler):
             message = data.HELP_PLAYBACK_MSG
         else:
             message = data.HELP_DURING_PLAY_MSG
-
+        
         return handler_input.response_builder.speak(message).ask(message).response
 # class FallbackIntentHandler(AbstractRequestHandler):
 #     def can_handle(self, handler_input):
@@ -250,9 +258,9 @@ sb.add_request_handler(CancelOrStopIntentHandler())
 sb.add_request_handler(YesHandler())
 sb.add_request_handler(NoHandler())
 sb.add_request_handler(HelpIntentHandler())
-
+sb.add_request_handler(SessionEndedRequestHandler())
 # sb.add_request_handler(FallbackIntentHandler())
-# sb.add_request_handler(SessionEndedRequestHandler())
+
 # sb.add_request_handler(ExceptionEncounteredHandler())
 # sb.add_exception_handler(CatchAllExceptionHandler())
 
