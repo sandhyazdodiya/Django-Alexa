@@ -7,7 +7,7 @@ from django.db import models
   
 class AudioData(models.Model): 
     user_id=models.TextField(primary_key=True,max_length=8000)
-    offset_in_milliseconds = models.TextField()
+    offset_in_milliseconds = models.TextField(null=True,blank=True)
     index=models.TextField()
     has_previous_playback_session=models.BooleanField(default=False)
     in_playback_session=models.BooleanField(default=False)
